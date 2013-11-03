@@ -61,3 +61,7 @@ with open('games-ordered.csv') as f:
     newRatings[away] = ratings[away]
     homeAdv[home] += homeDelta * 0.075
   dumpData()
+
+with open('rankings.txt', 'w') as f:
+  for team in ratings:
+    f.write("{},{},{}\n".format(ratings[team], team, homeAdv[team]))

@@ -29,7 +29,7 @@ for t in teams:
   homeAdv[t] = 100.0
   newRatings[t] = 1500.0
 
-lastDate = '20130930'
+lastDate = '2013-09-30'
 
 with open('games-ordered.csv') as f:
   for line in f:

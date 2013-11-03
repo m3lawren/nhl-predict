@@ -60,4 +60,4 @@ with open('games-ordered.csv') as f:
     newRatings[home] = ratings[home]
     newRatings[away] = ratings[away]
     homeAdv[home] += homeDelta * 0.075
-
+  dumpData()

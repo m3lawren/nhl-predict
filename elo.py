@@ -3,41 +3,36 @@
 import math
 import re
 
+divToTeams = { 
+  'Atlantic': set(['Tampa Bay', 'Toronto', 'Detroit', 'Boston', 'Montreal', 'Ottawa', 'Florida', 'Buffalo']),
+  'Metropolitan': set(['Pittsburgh', 'Washington', 'Ny Islanders', 'Ny Rangers', 'Carolina', 'Columbus', 'New Jersey', 'Philadelphia']),
+  'Central': set(['Colorado', 'Chicago', 'Minnesota', 'St Louis', 'Nashville', 'Dallas', 'Winnipeg']),
+  'Pacific': set(['Anaheim', 'San Jose', 'Phoenix', 'Vancouver', 'Los Angeles', 'Calgary', 'Edmonton'])
+}
+teamToDiv = {}
+for div in divToTeams:
+  for team in divToTeams[div]:
+    teamToDiv[team] = div
+
 teams = ['Anaheim','Boston','Buffalo','Calgary','Carolina','Chicago','Colorado','Columbus','Dallas','Detroit','Edmonton','Florida','Los Angeles','Minnesota','Montreal','Nashville','New Jersey','Ny Islanders','Ny Rangers','Ottawa','Philadelphia','Phoenix','Pittsburgh','San Jose','St Louis','Tampa Bay','Toronto','Vancouver','Washington','Winnipeg']
 ratings = {}
 homeAdv = {}
-newRatings = {}
+teamHistory = {}
 
-scoreRe = re.compile('^([a-zA-Z ]+) ([0-9]+) - ([a-zA-Z ]+) ([0-9]+)$')
+scoreRe = re.compile('^[^,]*,([a-zA-Z ]+) ([0-9]+) - ([a-zA-Z ]+) ([0-9]+)$')
 
 def expected(rHome, rAway):
   return 1.0 / (1.0 + math.pow(10.0, (rAway - rHome) / 400.0))
 
-dumpedHeader = False
-def dumpData():
-  global dumpedHeader, newRatings
-  if not dumpedHeader:
-    print 'Date,{}'.format(','.join(teams))
-    dumpedHeader = True
-  print '{},{}'.format(lastDate,','.join([str(newRatings[t]) for t in teams]))
-
-  for t in teams:
-    newRatings[t] = ''
-
 for t in teams:
   ratings[t] = 1500.0
   homeAdv[t] = 100.0
-  newRatings[t] = 1500.0
-
-lastDate = '2013-09-30'
+  history[t] = [('2013-09-30', 1500.0)]
 
 with open('games-ordered.csv') as f:
   for line in f:
     date = line.strip().split(',')[0]
-    if date != lastDate:
-      dumpData()
-      lastDate = date
-    (away, awayScoreStr, home, homeScoreStr) = scoreRe.match(line.strip().split(',')[1]).groups()
+    (away, awayScoreStr, home, homeScoreStr) = scoreRe.match(line).groups()
 
     awayScore = int(awayScoreStr)
     homeScore = int(homeScoreStr)
@@ -57,11 +52,10 @@ with open('games-ordered.csv') as f:
     
     ratings[home] += homeDelta
     ratings[away] -= homeDelta
-    newRatings[home] = ratings[home]
-    newRatings[away] = ratings[away]
+    history[home].append((date, ratings[home]))
+    history[away].append((date, ratings[away]))
     homeAdv[home] += homeDelta * 0.075
-  dumpData()
 
 with open('rankings.txt', 'w') as f:
-  for team in ratings:
-    f.write("{},{},{}\n".format(ratings[team], team, homeAdv[team]))
+  for (team, rating) in sorted(ratings.items(), key=lambda x: -x[1]):
+    f.write("{},{},{},{}\n".format(rating, team, teamToDiv[team], homeAdv[team]))

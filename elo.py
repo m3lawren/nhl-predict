@@ -17,7 +17,7 @@ for div in divToTeams:
 teams = ['Anaheim','Boston','Buffalo','Calgary','Carolina','Chicago','Colorado','Columbus','Dallas','Detroit','Edmonton','Florida','Los Angeles','Minnesota','Montreal','Nashville','New Jersey','Ny Islanders','Ny Rangers','Ottawa','Philadelphia','Phoenix','Pittsburgh','San Jose','St Louis','Tampa Bay','Toronto','Vancouver','Washington','Winnipeg']
 ratings = {}
 homeAdv = {}
-teamHistory = {}
+history = {}
 
 scoreRe = re.compile('^[^,]*,([a-zA-Z ]+) ([0-9]+) - ([a-zA-Z ]+) ([0-9]+)$')
 

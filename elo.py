@@ -2,6 +2,7 @@
 
 import math
 import re
+import json
 
 divToTeams = { 
   'Atlantic': set(['Tampa Bay', 'Toronto', 'Detroit', 'Boston', 'Montreal', 'Ottawa', 'Florida', 'Buffalo']),
@@ -27,7 +28,7 @@ def expected(rHome, rAway):
 for t in teams:
   ratings[t] = 1500.0
   homeAdv[t] = 100.0
-  history[t] = [('2013-09-30', 1500.0)]
+  history[t] = [{'date': '2013-09-30', 'rating': 1500.0}]
 
 with open('games-ordered.csv') as f:
   for line in f:
@@ -52,9 +53,15 @@ with open('games-ordered.csv') as f:
     
     ratings[home] += homeDelta
     ratings[away] -= homeDelta
-    history[home].append((date, ratings[home]))
-    history[away].append((date, ratings[away]))
+    history[home].append({'date': date, 'rating': ratings[home]})
+    history[away].append({'date': date, 'rating': ratings[away]})
     homeAdv[home] += homeDelta * 0.075
+
+with open('data.json', 'w') as f:
+  teams_data = []
+  for t in history:
+    teams_data.append({ 'team': t, 'division': teamToDiv[t], 'data': history[t] })
+  f.write(json.dumps(teams_data, indent=2))
 
 with open('rankings.txt', 'w') as f:
   for (team, rating) in sorted(ratings.items(), key=lambda x: -x[1]):

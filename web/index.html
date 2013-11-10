@@ -1,0 +1,177 @@
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>NHL Predictions</title>
+    <style>
+      path { fill: none; stroke: #999; }
+      #graph text { 
+        fill: #999;
+        font-family: sans-serif;
+        font-size: 12px;
+      }
+      .graph-line.inner { stroke-width: 3px; stroke-linecap: round; }
+      .graph-line.outer { stroke-width: 8px; stroke-linecap: round; }
+
+      .boston.outer { stroke: #231f20; }
+      .boston.inner { stroke: #fec322; }
+      .buffalo.inner { stroke: #fdbb30; }
+      .buffalo.outer { stroke: #002d62; }
+      .detroit.inner { stroke: white; }
+      .detroit.outer { stroke: #e13a3e; }
+      .florida.inner { stroke: #c4243e; }
+      .florida.outer { stroke: #002e5c; }
+      .montreal.inner { stroke: #be2f37; }
+      .montreal.outer { stroke: #20376e; }
+      .ottawa.inner { stroke: #e4173e; }
+      .ottawa.outer { stroke: black; }
+      .tampa-bay.inner { stroke: white; }
+      .tampa-bay.outer { stroke: #013d7c; }
+      .toronto.inner { stroke: #003876; }
+      .toronto.outer { stroke: #003876; }
+     
+      .carolina.inner { stroke: black; }
+      .carolina.outer { stroke: #e13a3e; }
+      .columbus.outer { stroke: #e03a3e; }
+      .columbus.inner { stroke: #00285d; }
+      .new-jersey.inner{ stroke: #e13a3e; }
+      .new-jersey.outer { stroke: black; }
+      .ny-islanders.inner { stroke: #f47d30; }
+      .ny-islanders.outer { stroke: #00539b; } 
+      .ny-rangers.inner { stroke: #e3393f; }
+      .ny-rangers.outer { stroke: #0161ab; }
+      .philadelphia.inner { stroke: black; }
+      .philadelphia.outer { stroke: #f47940; }
+      .pittsburgh.inner { stroke: #d0bd7f; }
+      .pittsburgh.outer { stroke: black; }
+      .washington.inner { stroke: #cf132b; }
+      .washington.outer { stroke: #00214e; }
+
+
+      .anaheim.inner { stroke: #91764c; }
+      .anaheim.outer { stroke: black; }
+      .calgary.inner { stroke: #ffc758; }
+      .calgary.outer { stroke: #e13a3e; }
+      .edmonton.inner { stroke: #e16b5f; }
+      .edmonton.outer { stroke: #003876; }
+      .los-angeles.inner { stroke: white; }
+      .los-angeles.outer { stroke: black; }
+      .phoenix.inner { stroke: #efe1c6; }
+      .phoenix.outer { stroke: #8e0028; }
+      .san-jose.inner { stroke: #088696; }
+      .san-jose.outer { stroke: black; }
+      .vancouver.inner { stroke: #057646; }
+      .vancouver.outer { stroke: #07346f; }
+
+      .chicago.inner { stroke: #d3010d; }
+      .chicago.outer { stroke: black; }
+      .colorado.inner { stroke: #265687; }
+      .colorado.outer { stroke: #8c2633; }
+      .dallas.inner { stroke: #006a4e; }
+      .dallas.outer { stroke: black; }
+      .minnesota.inner { stroke: #bf2b37; }
+      .minnesota.outer { stroke: #015836; }
+      .nashville.inner { stroke: #fdbb30; }
+      .nashville.outer { stroke: #002d62; }
+      .st-louis.inner { stroke: #0447a0; }
+      .st-louis.outer { stroke: #ffc325; }
+      .winnipeg.inner { stroke: #055c99; }
+      .winnipeg.outer { stroke: #002e62; }
+    </style>
+  </head>
+  <body>
+    <div id="graph">
+    </div>
+    <input type="button" value="Atlantic" onclick="toggleLines('atlantic')"/>
+    <input type="button" value="Metropolitan" onclick="toggleLines('metropolitan')"/>
+    <input type="button" value="Central" onclick="toggleLines('central')"/>
+    <input type="button" value="Pacific" onclick="toggleLines('pacific')"/>
+
+    <script src="jquery-2.0.3.js"></script>
+    <script src="d3.v3.js"></script>
+    <script>
+      function toggleLines(selector) {
+        $('.graph-line:not(.' + selector + ')').hide();
+        $('.graph-line.' + selector).show();
+        window.location = '#' + selector;
+      }
+      $.getJSON("data.json", function(all_data) {
+        var margin = {top: 25, right: 25, bottom: 25, left: 80};
+        var width = 1000 - margin.right - margin.left;
+        var height = 600 - margin.bottom - margin.top;
+        var firstDate = null;
+        var lastDate = null;
+        var minRating = null;
+        var maxRating = null;
+
+        all_data.forEach(function(ad) { 
+          ad.data.forEach(function(d) { 
+            d.realDate = new Date(d.date);
+            if (firstDate === null || firstDate > d.realDate) firstDate = d.realDate;
+            if (lastDate === null || lastDate < d.realDate) lastDate = d.realDate;
+            if (minRating === null || minRating > d.rating) minRating = d.rating;
+            if (maxRating === null || maxRating < d.rating) maxRating = d.rating;
+          });
+        });
+
+        function mkXScale() {
+          return d3.time.scale.utc().domain([firstDate, lastDate]).range([0, width]);
+        }
+
+        function mkYScale() {
+          return d3.scale.linear().domain([minRating - 20, maxRating + 20]).range([height, 0]);
+        }
+
+        var x = mkXScale();
+        var y = mkYScale();
+
+        var base = d3.select('#graph')
+          .append('svg:svg')
+          .attr('width', width + margin.left + margin.right)
+          .attr('height', height + margin.bottom + margin.top)
+          .append('g')
+            .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+        var yAxis = d3.svg.axis()
+          .scale(y)
+          .orient('left');
+
+        base.append('g')  
+          .attr('class', 'axis')
+          .attr('transform', 'translate(-1, 0)')
+          .call(yAxis);
+
+        var xAxis = d3.svg.axis()
+          .scale(x)
+          .orient('bottom');
+
+        base.append('g')
+          .attr('class', 'axis')
+          .attr('transform', 'translate(0,' + height + ')')
+          .call(xAxis);
+
+        var line = d3.svg.line()
+          .x(function(d,i) {
+            return x(d.realDate);
+          })
+          .y(function(d) {
+            return y(d.rating);
+          });
+        
+        all_data.forEach(function(ad) { 
+          base.append('path')
+            .attr('class', 'graph-line outer ' + ad.team.toLowerCase().replace(' ', '-') + ' ' + ad.division.toLowerCase())
+            .attr('d', line(ad.data));
+
+          base.append('path')
+            .attr('class', 'graph-line inner ' + ad.team.toLowerCase().replace(' ', '-') + ' ' + ad.division.toLowerCase())
+            .attr('d', line(ad.data));
+        });
+
+        if (location.hash === "")
+          toggleLines('atlantic');
+        else
+          toggleLines(location.hash); 
+      });
+    </script>
+  </body>
+</html>
